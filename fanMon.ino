@@ -6,6 +6,7 @@
 #define MSGDELAY 5000
 #define DOTDELAY 100
 #define FANTIMEOUT 1000
+#define LCDHEIGHT 2
 #define LCDWIDTH 16
 #define fanC 3
 
@@ -75,7 +76,7 @@ void initMessages() {
   Serial.print(PROCNAME);
   Serial.print(" Rev ");
   Serial.print(VERSION, DEC);
-  Serial.println("\r\nCopyright Ashlee 2015\r\nStarting...\r\n");
+  Serial.println("\r\nCopyright queen.Tea 2015\r\nStarting...\r\n");
 
   lcd.setCursor(2,0);
   lcd.print(PROCNAME);
@@ -163,7 +164,7 @@ void fanInit() {
 }
 
 void LCDinit() {
-  lcd.begin(16,2); 
+  lcd.begin(LCDWIDTH, LCDHEIGHT); 
 }
 
 
