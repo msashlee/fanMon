@@ -23,7 +23,11 @@ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 ##Tested on
 
-Arduino Uno - Circuit Diagram can be found in main repository folder.
+Arduino Uno 
+
+##Schematic
+
+fanMonV1.pdf - Original UNO hook up schematic can be found in main repository folder. Note that JP1, JP2, JP3 are Arduino UNO I/O blocks.
 
 ##Setup
 
