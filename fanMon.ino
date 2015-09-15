@@ -36,7 +36,7 @@ typedef struct{
 }fandef;
 
 //set the fans being measured.
-fandef fans[fanC]={{0,2,13},{1,2,12},{2,2,11}};
+fandef fans[fanC]={{0,2,13,0},{1,2,12,0},{2,2,11,0}};
 
 
 /* ********************* Main Code ******************* */
@@ -67,7 +67,7 @@ void serialInTest(bool test) {
   Serial.println("Unit in debug mode\r\n");
   delay(MSGDELAY/2);
   } else { 
-    Serial.println("Unit runnint in normal mode!\r\n");
+    Serial.println("Unit running in normal mode!\r\n");
   }
 }
 

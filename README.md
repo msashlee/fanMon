@@ -38,7 +38,7 @@ Set number of fans & LCD Width/Height:
 #define fanC 3
 ```
 
-Edit the following line as such: {index, Hall Sensor type, Trigger Pin}, adding entries for proper quantity of fans.
+Edit the following line as such: {index(0 indexed), Hall Sensor type, Trigger Pin, RPM (leave 0)}, adding entries for proper quantity of fans.
 
 Hall Type|ID #
 ---------|---------
@@ -47,7 +47,7 @@ Bi pole  | 1
 Quad Pole| 2
 
 ```C++
-fandef fans[fanC]={{0,2,13},{1,2,12},{2,2,11}};
+fandef fans[fanC]={{0,2,13,0},{1,2,12,0},{2,2,11,0}};
 ```
 
 Edit the following line to adjust LCD display pin out as needed.
