@@ -1,23 +1,28 @@
 //queen.Tea Copyright 2015
 //Init LCD
-#define VERSION 3002
+#define VERSION 3015
 #define PROCNAME "Fan Monitor"
-#define DEBUG 0
-#define MSGDELAY 5000
+#define DEBUG 1
+#define LCDDEBUG 1
+#define LCDENABLE 1
+#define MSGDELAY 3000
 #define DOTDELAY 100
 #define FANTIMEOUT 1000
 #define LCDHEIGHT 2
 #define LCDWIDTH 16
+#define SAMPLESIZE 100
 #define fanC 3
+#define POLLCYCLEDELAY 1000
+#define FREQFADEDELAY 1000
 
 #include <FreqMeasure.h>
 #include <LiquidCrystal.h>
-LiquidCrystal lcd( 7,6,5, 4, 3, 2);
+LiquidCrystal lcd( 7, 6, 5, 4, 3, 2);
 
 int Calc = 0;
 double sum=0;
 int count=0;
-int startT=0;
+unsigned long startT=0;
 
 /* ***************** TYPEDEF Structures ****************** */
 
@@ -26,7 +31,7 @@ typedef struct{
   unsigned int fandiv; }fanspec;
 
 //sensor dividers
-fanspec fanspace[3]={{0,1},{1,2},{2,4}};
+fanspec fanspace[4]={{0,1},{1,2},{2,4},{3,8}};
 
 typedef struct{
   char fan;
@@ -36,7 +41,7 @@ typedef struct{
 }fandef;
 
 //set the fans being measured.
-fandef fans[fanC]={{0,2,13,0},{1,2,12,0},{2,2,11,0}};
+fandef fans[fanC]={{0,2,13,0},{1,2,12,0},{2, 2 ,11,0}};
 
 
 /* ********************* Main Code ******************* */
@@ -51,24 +56,20 @@ void setup() {
   }
 
 void loop() {
-if (DEBUG){ Serial.println("Starting Main Loop\r\nrunning calc");}
-
-checkRPM(75);
-printLCD();
-delay(1000);
-
-if (DEBUG){ Serial.println("End Main Loop");}
+if (DEBUG){ Serial.println("Starting Main Loop\r\n running calcs:");}
+checkRPM(SAMPLESIZE);
+if(LCDENABLE) {printLCD();}
+if (DEBUG){ Serial.println("End Main Loop\r\n");}
+delay(POLLCYCLEDELAY);
 }
 
 
 /* ************************** MESSAGES *********************** */
 void serialInTest(bool test) {
-  if (test) {
-  Serial.println("Unit in debug mode\r\n");
-  delay(MSGDELAY/2);
-  } else { 
-    Serial.println("Unit running in normal mode!\r\n");
-  }
+    Serial.print("\tUnit in mode: ");
+    Serial.println(test);
+    Serial.println();
+    delay(MSGDELAY/2);
 }
 
 void initMessages() {
@@ -78,6 +79,17 @@ void initMessages() {
   Serial.print(VERSION, DEC);
   Serial.println("\r\nCopyright queen.Tea 2015\r\nStarting...\r\n");
 
+  Serial.println("RPM Monitor Info\r\n\tFan Setups\r\n\t\tHall Sensor Types\r\n\t\t\t0 - Mono Pole\r\n\t\t\t1 - Bi Pole\r\n\t\t\t2 - Quad Pole\r\n");
+  for (int x = 0; x<fanC ;x++){
+    Serial.print("\t\tFan ");
+    Serial.print(x+1,DEC); 
+    Serial.print(": Sensor Type: ");
+    Serial.print(fans[x].type);
+    Serial.print(" Trigger Pin: ");
+    Serial.println(fans[x].triggerpin);
+    }
+    
+if (LCDENABLE) {
   lcd.setCursor(2,0);
   lcd.print(PROCNAME);
   lcd.setCursor(3,1);
@@ -93,20 +105,12 @@ void initMessages() {
   delay(MSGDELAY);
   lcd.clear();
   /*short boot fan info*/
-  
-  Serial.println("RPM Monitor Info\r\nFan Setups:\r\nFan Hall Sensor Types:\r\n 0:Mono Pole\r\n 1:Bi Pole\r\n 2:Quad Pole\r\n");
   for (int x = 0; x<fanC ;x++){
     lcd.setCursor(1,0);
     lcd.print("Fan Count: ");
     lcd.print(x+1, DEC);
     lcd.print("/");
     lcd.print(fanC, DEC);
-    Serial.print("Fan ");
-    Serial.print(x+1,DEC); 
-    Serial.print(": Sensor Type: ");
-    Serial.print(fans[x].type);
-    Serial.print(" Trigger Pin: ");
-    Serial.println(fans[x].triggerpin);
     lcd.setCursor (0,1);
     lcd.print("Type: ");
     lcd.print(fans[x].type);
@@ -145,16 +149,16 @@ void initMessages() {
     delay(250);
    lcd.clear();
   }*/
-  Serial.print("\r\nStarting Monitor");
-  Serial.println("\r\n");
-    lcd.setCursor(4,0);
+  
+
+  lcd.setCursor(4,0);
   lcd.print("Monitor"); 
   lcd.setCursor(4,1);
   lcd.print("Starting"); 
   delay(MSGDELAY/2);
 }
-
-
+Serial.println("\r\nMonitor Starting...");
+}
 /* *************************** INIT Proc ****************************** */
 void fanInit() {
   for (int x = 0; x<fanC; x++){ 
@@ -185,24 +189,25 @@ void printLCD(){
   lcd.clear();
   for (int x=0; x < fanC;x++){
    // startP=lastP[0];
-    if (DEBUG){ 
-      Serial.print("x:");
+    if (LCDDEBUG){ 
+      Serial.print(" printLCD: x:");
       Serial.println(x);
-      Serial.print("lblLast: ");
+      Serial.print("  lblLast: ");
       Serial.print(lblLast[0]);
-      Serial.print(" rpmLast: ");
+      Serial.print("  rpmLast: ");
       Serial.println(rpmLast[0]);
     }
     lblLast[0]=lcdProc(msg + String(x+1,DEC),lblLast[0],0)+offset;
     rpmLast[0]=lcdProc(String(fans[x].rpm,DEC),rpmLast[0],1)+offset;
    // startP=lastP[0]+2;
-    if (DEBUG){ 
-      Serial.print("lblLast: ");
+    if (LCDDEBUG){ 
+      Serial.print("  lblLast: ");
       Serial.print(lblLast[0]);
-      Serial.print("rpmLast: ");
+      Serial.print("  rpmLast: ");
       Serial.println(rpmLast[0]);
     }
   }
+  Serial.println(" printLCD end");
 }
 
 int lcdProc (String strIn, int offset,int r){
@@ -221,58 +226,72 @@ int lcdProc (String strIn, int offset,int r){
 }
 
 void checkRPM(int n){
-  if (DEBUG){Serial.println("checkRPM starting");}
+  if (DEBUG){Serial.println(" checkRPM starting");}
   for (int x=0; x < fanC;x++){
+      Serial.print("  checkRPM : for loop-x: ");
+      Serial.println(x,DEC);
     fans[x].rpm = getRPMbyHz(fans[x].triggerpin,fans[x].type,n);
-    if (DEBUG && fans[x].rpm==0){fans[x].rpm=666;}
+    if (fans[x].rpm ==-1) {
+       if (DEBUG){fans[x].rpm=666;}else{fans[x].rpm=0;}
+    }
     if (DEBUG) {
-      Serial.print("checkRPM - x: ");
-      Serial.print(x,DEC);
-      Serial.print(" fans.rpm: ");
+      Serial.print("  checkRPM: fans.rpm: ");
       Serial.println(fans[x].rpm);
       }
+    delay(FREQFADEDELAY);
     }
-  if (DEBUG){Serial.println("checkRPM done\r\n");}
+  if (DEBUG){Serial.println(""); Serial.println(" checkRPM done\r\n");}
 }
 
 int getRPMbyHz(int trigPin, int divFac, int n) {
+  digitalWrite(trigPin, HIGH);
+  startT = millis();
+  unsigned long timeI = 0;
+  unsigned long now = 0;
   sum = 0;
   count = 0;
-  startT = millis();
+  timeI = startT;
   if (DEBUG) {
-    Serial.print("getRPMbyHZ - t: ");
+    Serial.print("  getRPMbyHZ: starting:\r\n   startT: ");
     Serial.print(startT);
     Serial.print(" trigPin: ");
+    Serial.print(trigPin);
+    Serial.print(" divFac: ");
     Serial.print(divFac);
     Serial.print(" sample size: ");
     Serial.println(n);
   }
-  digitalWrite(trigPin, HIGH);
+  
   FreqMeasure.begin();
     while(count < n){
+      now = millis();
       if (FreqMeasure.available()) {
         sum = sum + FreqMeasure.read();
         count++;
         startT = millis();
-        } else if (millis() - startT > FANTIMEOUT) {
-          if (DEBUG) {Serial.println("getRPMbyHz timed out");}
+        } else if (now - startT > FANTIMEOUT) {
+          if (DEBUG) {Serial.print("   getRPMbyHz: to: tT:");
+                      Serial.println(now-timeI);}
           digitalWrite(trigPin, LOW);
-          return 0;
-        }
+          return -1;
+        } else if (now - startT < 0) {
+          if (DEBUG) {Serial.println("   getRPMbyHz: t ovf");}
+    }
     }
     float frequency = FreqMeasure.countToFrequency(sum / count);
-    float rpm = frequency * 60.0 / divFac;
+    float rpm = frequency * 60.0 / float(divFac);
     
     if (DEBUG){   
-      Serial.print("getRPMbyHz: Sum: ");
+      Serial.print("   getRPMbyHz: Sum: ");
       Serial.print(sum);
       Serial.print(" Count: ");
       Serial.print(count);
       Serial.print(" f: ");
       Serial.print(frequency);
       Serial.print(" rpm: ");
-      Serial.println(rpm); 
-      Serial.println("Exiting getRPMbyHz\r\n");
+      Serial.print(rpm); 
+      Serial.print(" tT:");
+      Serial.println(now-timeI);
       }
     sum = 0;
     count = 0;  
